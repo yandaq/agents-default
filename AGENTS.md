@@ -10,6 +10,7 @@ Behavioural and engineering guidelines to reduce common LLM coding mistakes. Mer
 
 Before implementing:
 - Inspect the relevant code, tests and repository conventions.
+- Before installing any tool or dependency, check whether the required capability is already provided by the execution environment or the repository.
 - State material assumptions explicitly.
 - If multiple interpretations exist, identify them rather than choosing silently.
 - Prefer the simplest interpretation consistent with the request.
@@ -128,16 +129,17 @@ Document any necessary architectural compromise and its trade-off in `PLAN.md`.
 
 Ask: "Does this split reduce cognitive load, or merely move complexity around?" If it only moves complexity, keep it together.
 
-## 8. End-to-End Testing
+## 8. Browser End-to-End Validation
 
-**Use Playwright for browser-based end-to-end behaviour.**
+**Use Pi's built-in Playwright-compatible browser automation tools for browser testing.**
 
-- Add or update Playwright coverage for user-visible browser behaviour.
-- Capture browser console messages during Playwright tests.
+- Do not install Playwright, Chromium or other browser-testing packages solely to perform validation; the execution environment already provides the required browser automation.
+- Use the built-in browser tools to verify user-visible browser behaviour and real user journeys.
+- Capture browser console messages during browser validation.
 - Treat unexpected browser console errors and unhandled page errors as test failures.
 - Do not ignore console errors without documenting a specific, justified exception.
-- Verify the real user journey rather than duplicating lower-level implementation tests.
-- Do not introduce Playwright into repositories without browser-based behaviour unless explicitly requested.
+- Do not add Playwright configuration, dependencies or test files unless the task explicitly requests committed Playwright test coverage.
+- If the repository already has a browser test suite, use its existing documented commands without changing dependencies unless a missing dependency is confirmed.
 
 ## 9. Final Validation
 
@@ -147,7 +149,7 @@ Before declaring work complete, run all applicable checks:
 - Linting and formatting checks.
 - Type checking.
 - Build validation.
-- Applicable Playwright end-to-end tests.
+- Applicable browser end-to-end validation using Pi's built-in browser automation tools.
 - Browser console and unhandled page-error checks.
 
 Record a precise blocker rather than marking work complete when required validation cannot run or does not pass.
