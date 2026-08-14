@@ -4,6 +4,9 @@ Behavioural and engineering guidelines to reduce common LLM coding mistakes. Mer
 
 **Trade-off:** These guidelines favour caution, clarity and verifiable progress over speed. Use judgement for trivial tasks.
 
+> `AGENTS.md` defines **how agents engineer changes**.  
+> `VALIDATION.md` defines **how agents prove those changes are correct**.
+
 ## 1. Think Before Coding
 
 **Do not assume. Do not hide confusion. Surface trade-offs.**
@@ -47,47 +50,41 @@ When your changes create orphans:
 - Remove imports, variables, functions and files made unused by your change.
 - Do not remove pre-existing dead code unless asked.
 
-Every changed line should trace directly to the request or its required validation.
+Every changed line should trace directly to the request or to work required to keep the change correct, coherent and maintainable.
 
-## 4. Goal-Driven Execution
+## 4. Outcome-Driven Execution
 
-**Define observable success criteria and continue until they are verified.**
+**Understand the required outcome before deciding how to implement it.**
 
-Transform tasks into verifiable goals:
-- "Add validation" → write tests for invalid inputs, then make them pass.
-- "Fix the bug" → write a test that reproduces it, then make it pass.
-- "Refactor X" → confirm tests pass before and after.
+- Translate the request into a clear behavioural outcome.
+- Identify constraints, invariants and affected public contracts.
+- Distinguish the requested outcome from a suggested implementation approach.
+- Prefer the smallest implementation that achieves the outcome.
+- For multi-step work, create a brief `PLAN.md` and work one step at a time unless explicitly instructed otherwise.
+- Keep each plan step independently understandable and small enough to reason about.
+- Do not treat implementation activity as evidence of success; completion is governed by `VALIDATION.md`.
 
-For multi-step work, use a brief plan:
+For multi-step work, a plan may use this shape:
 
 ```text
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
+1. [Step] → outcome: [expected result]
+2. [Step] → outcome: [expected result]
+3. [Step] → outcome: [expected result]
 ```
 
-- Define success criteria for every plan step.
-- Work on one plan step at a time unless explicitly instructed otherwise.
-- Do not claim completion without running the required validation.
-- If validation fails, diagnose, fix and rerun it until it passes or a genuine blocker is identified.
-- Do not substitute a plausible-looking implementation for evidence.
+## 5. Preserve Existing Behaviour
 
-## 5. Test-Driven Development
+**Change the requested behaviour without accidentally changing unrelated behaviour.**
 
-**Demonstrate behaviour with tests before or alongside implementation.**
+- Treat existing public behaviour as a constraint unless the task explicitly changes it.
+- Preserve API contracts, data formats, configuration semantics and user-visible behaviour outside the requested scope.
+- Avoid broad rewrites when a local change is sufficient.
+- Consider downstream callers and consumers before changing shared code.
+- Prefer backwards-compatible changes when compatibility is part of the existing contract.
+- Do not silently change defaults, error semantics or side effects.
+- If an intentional breaking change is required, make it explicit in the plan and implementation.
 
-Use this cycle where practical:
-1. Write or update a test that expresses the required behaviour.
-2. Confirm it fails for the expected reason.
-3. Implement the minimum code needed to pass.
-4. Refactor while keeping tests green.
-
-- Convert bug fixes into reproducing tests before fixing them.
-- Add meaningful coverage for new and changed behaviour.
-- Test observable behaviour rather than implementation details.
-- Include relevant happy paths, boundary cases and failure paths.
-- Do not weaken, remove, skip or rewrite tests merely to make validation pass.
-- Run the smallest relevant test set during implementation, then run the complete required validation before completion.
+Ask: "What existing behaviour could this change accidentally disturb?"
 
 ## 6. Architecture and Design
 
@@ -112,7 +109,7 @@ Before implementing a change:
 1. Identify the module that owns the behaviour.
 2. Identify the public contract affected.
 3. Identify external or non-deterministic dependencies that require isolation.
-4. Identify the tests that will demonstrate the behaviour.
+4. Identify where the change naturally belongs.
 5. Prefer changing the owning module over spreading conditional logic across callers.
 
 Document any necessary architectural compromise and its trade-off in `PLAN.md`.
@@ -126,6 +123,8 @@ Document any necessary architectural compromise and its trade-off in `PLAN.md`.
 - Do not split code merely to reduce file length.
 - Avoid tiny fragments that force readers or agents to chase context across many files.
 - Prefer modules that are understandable in isolation.
+- Keep related implementation, contracts and diagnostics easy to locate.
+- Avoid structures that require loading large amounts of unrelated context to make a small change.
 
 Ask: "Does this split reduce cognitive load, or merely move complexity around?" If it only moves complexity, keep it together.
 
@@ -138,39 +137,39 @@ Ask: "Does this split reduce cognitive load, or merely move complexity around?" 
 - Include enough diagnostic context to identify where and why a failure occurred.
 - Prefer machine-readable diagnostic output where practical.
 - Ensure important asynchronous, background and integration failures remain discoverable after they occur.
-- Expose useful state or health information where behaviour cannot be verified directly.
+- Expose useful state or health information where behaviour cannot be inspected directly.
 - Avoid requiring manual visual inspection as the only means of determining whether something worked.
 - When adding a feature, consider how a coding agent will determine that it is working correctly and diagnose it when it is not.
-- Make observable signals available to automated tests and CI/CD validation wherever practical.
-- Do not add excessive logging or instrumentation without a concrete diagnostic or validation purpose.
+- Make observable signals available to automated checks and CI/CD wherever practical.
+- Do not add excessive logging or instrumentation without a concrete diagnostic or operational purpose.
 
 Ask: "If this fails when no human is watching, can an agent determine what failed and why?"
 
-## 9. Browser End-to-End Validation
+## 9. Follow Existing Conventions
 
-**Use Pi's built-in Playwright-compatible browser automation tools for browser testing.**
+**Prefer the repository's established patterns over inventing new ones.**
 
-- Do not install Playwright, Chromium or other browser-testing packages solely to perform validation; the execution environment already provides the required browser automation.
-- Use the built-in browser tools to verify user-visible browser behaviour and real user journeys.
-- Capture browser console messages during browser validation.
-- Treat unexpected browser console errors and unhandled page errors as test failures.
-- Do not ignore console errors without documenting a specific, justified exception.
-- Do not add Playwright configuration, dependencies or test files unless the task explicitly requests committed Playwright test coverage.
-- If the repository already has a browser test suite, use its existing documented commands without changing dependencies unless a missing dependency is confirmed.
+- Reuse existing libraries, utilities, abstractions and project conventions where they are fit for purpose.
+- Match existing naming, structure, formatting and error-handling patterns.
+- Use the project's documented commands and workflows before introducing alternatives.
+- Do not add a new dependency when the repository or execution environment already provides the capability.
+- Do not introduce a second way of solving a problem unless there is a concrete reason.
+- When conventions conflict with the requested change, make the conflict explicit rather than silently bypassing them.
+- If a new pattern is genuinely required, keep it small, document why it exists and apply it consistently within the affected scope.
 
-## 10. Final Validation
+Ask: "Am I extending the system that is already here, or accidentally creating a parallel one?"
 
-Before declaring work complete, run all applicable checks:
-- Relevant unit and integration tests.
-- The full required test suite.
-- Linting and formatting checks.
-- Type checking.
-- Build validation.
-- Applicable browser end-to-end validation using Pi's built-in browser automation tools.
-- Browser console and unhandled page-error checks.
+## 10. Validate Before Completion
 
-Record a precise blocker rather than marking work complete when required validation cannot run or does not pass.
+**A change is not complete until the applicable validation defined in `VALIDATION.md` has passed.**
+
+- Read and follow `VALIDATION.md` for the validation process, evidence requirements and feedback loop.
+- Select validation checks according to the change, repository and risk; do not assume every check applies to every task.
+- Do not declare success based on code inspection or plausibility alone.
+- Do not weaken tests, suppress errors or bypass checks merely to make validation pass.
+- When validation fails, use the failure evidence to diagnose and correct the implementation, then run the relevant checks again.
+- If required validation cannot be run or cannot pass, record the precise blocker instead of claiming completion.
 
 ---
 
-**These guidelines are working when:** diffs remain focused, designs stay simple, tests demonstrate changed behaviour, systems expose enough diagnostic evidence to explain failures, architectural boundaries remain clear, and completion claims are backed by passing validation.
+**These guidelines are working when:** diffs remain focused, designs stay simple, repository conventions are respected, systems are observable, architectural boundaries remain clear, unrelated behaviour is preserved, and completion claims are backed by the evidence required in `VALIDATION.md`.
