@@ -112,7 +112,7 @@ Before implementing a change:
 4. Identify where the change naturally belongs.
 5. Prefer changing the owning module over spreading conditional logic across callers.
 
-Document any necessary architectural compromise and its trade-off in `PLAN.md`.
+Document any necessary architectural compromise and its trade-off in `ARCHITECTURE.md`.
 
 ## 7. Context-Friendly Modularity
 
