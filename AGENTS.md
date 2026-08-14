@@ -129,7 +129,24 @@ Document any necessary architectural compromise and its trade-off in `PLAN.md`.
 
 Ask: "Does this split reduce cognitive load, or merely move complexity around?" If it only moves complexity, keep it together.
 
-## 8. Browser End-to-End Validation
+## 8. Design for Observability
+
+**Build systems so that their behaviour, failures and state can be inspected by both humans and coding agents.**
+
+- Do not silently swallow errors or exceptions.
+- Surface failures through an appropriate observable channel: process output, browser console, structured logging, files, API responses, test results or equivalent.
+- Include enough diagnostic context to identify where and why a failure occurred.
+- Prefer machine-readable diagnostic output where practical.
+- Ensure important asynchronous, background and integration failures remain discoverable after they occur.
+- Expose useful state or health information where behaviour cannot be verified directly.
+- Avoid requiring manual visual inspection as the only means of determining whether something worked.
+- When adding a feature, consider how a coding agent will determine that it is working correctly and diagnose it when it is not.
+- Make observable signals available to automated tests and CI/CD validation wherever practical.
+- Do not add excessive logging or instrumentation without a concrete diagnostic or validation purpose.
+
+Ask: "If this fails when no human is watching, can an agent determine what failed and why?"
+
+## 9. Browser End-to-End Validation
 
 **Use Pi's built-in Playwright-compatible browser automation tools for browser testing.**
 
@@ -141,7 +158,7 @@ Ask: "Does this split reduce cognitive load, or merely move complexity around?" 
 - Do not add Playwright configuration, dependencies or test files unless the task explicitly requests committed Playwright test coverage.
 - If the repository already has a browser test suite, use its existing documented commands without changing dependencies unless a missing dependency is confirmed.
 
-## 9. Final Validation
+## 10. Final Validation
 
 Before declaring work complete, run all applicable checks:
 - Relevant unit and integration tests.
@@ -156,4 +173,4 @@ Record a precise blocker rather than marking work complete when required validat
 
 ---
 
-**These guidelines are working when:** diffs remain focused, designs stay simple, tests demonstrate changed behaviour, architectural boundaries remain clear, and completion claims are backed by passing validation.
+**These guidelines are working when:** diffs remain focused, designs stay simple, tests demonstrate changed behaviour, systems expose enough diagnostic evidence to explain failures, architectural boundaries remain clear, and completion claims are backed by passing validation.
